@@ -11,7 +11,7 @@
 2. Fill Technical Context (scan for NEEDS CLARIFICATION)
    → Detect Project Type from file system structure or context (web=frontend+backend, mobile=app+api)
    → Set Structure Decision based on project type
-3. Fill the Constitution Check section based on the content of the constitution document.
+3. Fill the Constitution Check section by mapping the feature approach to each governing principle (Code Quality, UX Consistency, Performance Accountability).
 4. Evaluate Constitution Check section below
    → If violations exist: Document in Complexity Tracking
    → If no justification possible: ERROR "Simplify approach first"
@@ -47,7 +47,10 @@
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- **Principle I – Uncompromising Code Quality**: Planned work includes automated tests meeting coverage thresholds, lint/static analysis gating, and peer review ownership.
+- **Principle II – Seamless User Experience Consistency**: UX acceptance criteria, accessibility assurances, and regression test strategy are documented and feasible.
+- **Principle III – Performance Accountability**: Performance budgets are enumerated, instrumentation tasks are scheduled, and validation steps are practical.
+- **Execution Standards**: Each requirement maps to the principle it upholds, and CI/release evidence is identified.
 
 ## Project Structure
 
@@ -216,4 +219,4 @@ directories captured above]
 - [ ] Complexity deviations documented
 
 ---
-*Based on Constitution v2.1.1 - See `/memory/constitution.md`*
+*Based on Constitution v1.0.0 - See `/.specify/memory/constitution.md`*

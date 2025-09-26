@@ -15,14 +15,19 @@
    → Mark with [NEEDS CLARIFICATION: specific question]
 4. Fill User Scenarios & Testing section
    → If no clear user flow: ERROR "Cannot determine user scenarios"
+   → Capture UX acceptance criteria aligned with Principle II (Seamless User Experience Consistency)
 5. Generate Functional Requirements
    → Each requirement must be testable
+   → Tag each requirement with applicable principle markers: [P1]=Code Quality, [P2]=UX Consistency, [P3]=Performance Accountability
    → Mark ambiguous requirements
-6. Identify Key Entities (if data involved)
-7. Run Review Checklist
+6. Record performance budgets and quality evidence
+   → Document latency/fps/resource budgets defined by Principle III
+   → Outline automated test expectations supporting Principle I
+7. Identify Key Entities (if data involved)
+8. Run Review Checklist
    → If any [NEEDS CLARIFICATION]: WARN "Spec has uncertainties"
    → If implementation details found: ERROR "Remove tech details"
-8. Return: SUCCESS (spec ready for planning)
+9. Return: SUCCESS (spec ready for planning)
 ```
 
 ---
@@ -31,6 +36,7 @@
 - ✅ Focus on WHAT users need and WHY
 - ❌ Avoid HOW to implement (no tech stack, APIs, code structure)
 - 👥 Written for business stakeholders, not developers
+- 🔖 Map every requirement to at least one governing principle (P1/P2/P3)
 
 ### Section Requirements
 - **Mandatory sections**: Must be completed for every feature
@@ -64,19 +70,27 @@ When creating this spec from a user prompt:
 ### Edge Cases
 - What happens when [boundary condition]?
 - How does system handle [error scenario]?
+- Confirm accessibility and input modality coverage (keyboard, mouse, touch) for each scenario [P2]
 
 ## Requirements *(mandatory)*
 
+> Principle tags: **[P1]** Code Quality, **[P2]** UX Consistency, **[P3]** Performance Accountability.
+
 ### Functional Requirements
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
+- **FR-001 [P1]**: System MUST [specific capability, e.g., "allow users to create accounts"]
+- **FR-002 [P1][P2]**: System MUST [specific capability, e.g., "validate email addresses"]  
+- **FR-003 [P2]**: Users MUST be able to [key interaction, e.g., "reset their password"]
+- **FR-004 [P1]**: System MUST [data requirement, e.g., "persist user preferences"]
+- **FR-005 [P1][P2]**: System MUST [behavior, e.g., "log all security events"]
 
 *Example of marking unclear requirements:*
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+- **FR-006 [P1][P2]**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
+- **FR-007 [P1]**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+
+### Performance Budgets *(mandatory)*
+- **PB-001 [P3]**: Define p95 action-to-render latency target (≤150 ms unless otherwise justified)
+- **PB-002 [P3]**: Specify steady-state frame rate goal (≥60 fps on reference hardware)
+- **PB-003 [P3]**: Document resource ceilings (CPU, memory, energy) and telemetry strategy
 
 ### Key Entities *(include if feature involves data)*
 - **[Entity 1]**: [What it represents, key attributes without implementation]
@@ -92,6 +106,7 @@ When creating this spec from a user prompt:
 - [ ] Focused on user value and business needs
 - [ ] Written for non-technical stakeholders
 - [ ] All mandatory sections completed
+- [ ] Requirements and budgets mapped to constitutional principles (P1/P2/P3)
 
 ### Requirement Completeness
 - [ ] No [NEEDS CLARIFICATION] markers remain
@@ -99,6 +114,7 @@ When creating this spec from a user prompt:
 - [ ] Success criteria are measurable
 - [ ] Scope is clearly bounded
 - [ ] Dependencies and assumptions identified
+- [ ] Performance budgets documented with validation approach
 
 ---
 
