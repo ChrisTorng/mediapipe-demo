@@ -4,39 +4,39 @@
 **Input Documents**: `plan.md`, `research.md`, `data-model.md`, `contracts/media-session.yaml`, `quickstart.md`
 
 ## Phase 3.1 Setup
-- [ ] T001 Scaffold Vite React + TypeScript 專案結構於 `web/`，將 `src/components|hooks|mediapipe|scenes|styles|utils` 與 `tests/unit|visual|smoke|perf` 目錄初始化，並在 `web/package.json` 內建立 npm scripts（`dev`,`build`,`lint`,`test:unit`,`test:e2e`,`test:perf`）[P1]
-- [ ] T002 配置 TypeScript 嚴格模式與路徑別名（`tsconfig.json`, `vite.config.ts`），確保可導入 `@/components` 等別名 [P1]
-- [ ] T003 建立 ESLint + Prettier + Stylelint 設定（`web/.eslintrc.cjs`, `.prettierrc`, `.stylelintrc.cjs`），並將 constitution 原則檢查規則加入 `package.json` scripts [P1][P2]
-- [ ] T004 安裝並設定 Tailwind CSS + 自訂無障礙設計 token（`web/tailwind.config.cjs`, `web/postcss.config.cjs`, `web/src/styles/tokens.css`），同步在 `web/src/styles/global.css` 內引入 [P1][P2]
-- [ ] T005 安裝 Google MediaPipe Tasks Web 套件與對應 wasm 資產下載腳本 (`web/scripts/mediapipe/fetch-models.ts`)，並在 `package.json` postinstall 觸發 [P1][P3]
+- [X] T001 Scaffold Vite React + TypeScript 專案結構於 `web/`，將 `src/components|hooks|mediapipe|scenes|styles|utils` 與 `tests/unit|visual|smoke|perf` 目錄初始化，並在 `web/package.json` 內建立 npm scripts（`dev`,`build`,`lint`,`test:unit`,`test:e2e`,`test:perf`）[P1]
+- [X] T002 配置 TypeScript 嚴格模式與路徑別名（`tsconfig.json`, `vite.config.ts`），確保可導入 `@/components` 等別名 [P1]
+- [X] T003 建立 ESLint + Prettier + Stylelint 設定（`web/.eslintrc.cjs`, `.prettierrc`, `.stylelintrc.cjs`），並將 constitution 原則檢查規則加入 `package.json` scripts [P1][P2]
+- [X] T004 安裝並設定 Tailwind CSS + 自訂無障礙設計 token（`web/tailwind.config.cjs`, `web/postcss.config.cjs`, `web/src/styles/tokens.css`），同步在 `web/src/styles/global.css` 內引入 [P1][P2]
+- [X] T005 安裝 Google MediaPipe Tasks Web 套件與對應 wasm 資產下載腳本 (`web/scripts/mediapipe/fetch-models.ts`)，並在 `package.json` postinstall 觸發 [P1][P3]
 
 ## Phase 3.2 Tests First (TDD)
-- [ ] T006 [P][P1][P3] 撰寫初始化契約測試於 `web/tests/unit/contracts/initialize-session.contract.test.ts`，模擬 `initializeSession` 回傳 `status: ready` 與 `fpsTarget`
-- [ ] T007 [P][P1][P3] 撰寫切換資產契約測試於 `web/tests/unit/contracts/switch-asset.contract.test.ts`，驗證無效資產時回傳 422
-- [ ] T009 [P][P1][P3] 撰寫指標查詢契約測試於 `web/tests/unit/contracts/get-metrics.contract.test.ts`，驗證 `rollingFps` 與 `latencyMs` 匯出格式
-- [ ] T010 [P][P1][P2][P3] 建立行動裝置主流程煙霧測試於 `web/tests/smoke/mobile-try-on.spec.ts`，覆蓋鏡頭授權與三資產切換
-- [ ] T011 [P][P1][P2] 建立桌機降階煙霧測試於 `web/tests/smoke/desktop-fallback.spec.ts`，覆蓋拒絕鏡頭→照片上傳流程
-- [ ] T012 [P][P2] 建立眼鏡視覺回歸基準於 `web/tests/visual/glasses.visual.spec.ts`
-- [ ] T013 [P][P2] 建立彩妝視覺回歸基準於 `web/tests/visual/makeup.visual.spec.ts`
-- [ ] T014 [P][P2] 建立鞋款視覺回歸基準於 `web/tests/visual/shoes.visual.spec.ts`
-- [ ] T015 [P][P3] 建立性能煙霧測試於 `web/tests/perf/session-metrics.perf.spec.ts`，紀錄 p95 延遲與 rolling fps
-- [ ] T016 [P][P2] 建立 axe 無障礙掃描腳本於 `web/tests/smoke/accessibility.spec.ts`
+- [X] T006 [P][P1][P3] 撰寫初始化契約測試於 `web/tests/unit/contracts/initialize-session.contract.test.ts`，模擬 `initializeSession` 回傳 `status: ready` 與 `fpsTarget`
+- [X] T007 [P][P1][P3] 撰寫切換資產契約測試於 `web/tests/unit/contracts/switch-asset.contract.test.ts`，驗證無效資產時回傳 422
+- [X] T009 [P][P1][P3] 撰寫指標查詢契約測試於 `web/tests/unit/contracts/get-metrics.contract.test.ts`，驗證 `rollingFps` 與 `latencyMs` 匯出格式
+- [X] T010 [P][P1][P2][P3] 建立行動裝置主流程煙霧測試於 `web/tests/smoke/mobile-try-on.spec.ts`，覆蓋鏡頭授權與三資產切換
+- [X] T011 [P][P1][P2] 建立桌機降階煙霧測試於 `web/tests/smoke/desktop-fallback.spec.ts`，覆蓋拒絕鏡頭→照片上傳流程
+- [X] T012 [P][P2] 建立眼鏡視覺回歸基準於 `web/tests/visual/glasses.visual.spec.ts`
+- [X] T013 [P][P2] 建立彩妝視覺回歸基準於 `web/tests/visual/makeup.visual.spec.ts`
+- [X] T014 [P][P2] 建立鞋款視覺回歸基準於 `web/tests/visual/shoes.visual.spec.ts`
+- [X] T015 [P][P3] 建立性能煙霧測試於 `web/tests/perf/session-metrics.perf.spec.ts`，紀錄 p95 延遲與 rolling fps
+- [X] T016 [P][P2] 建立 axe 無障礙掃描腳本於 `web/tests/smoke/accessibility.spec.ts`
 
 ## Phase 3.3 Core Implementation
-- [ ] T017 實作 `DemoAsset` 型別與示例資料於 `web/src/models/demo-asset.ts`，提供靜態列表與授權註記 [P1][P2]
-- [ ] T018 實作 `AccessibilityHint` 型別與內容於 `web/src/models/accessibility-hint.ts`，含鍵盤/觸控/閱讀器訊息 [P1][P2]
-- [ ] T019 實作 `PreviewState` 與 fps buffer 輔助函式於 `web/src/models/preview-state.ts`，滿足性能指標追蹤 [P1][P3]
-- [ ] T020 建立 `web/src/mediapipe/media-session-adapter.ts`，封裝 MediaPipe 任務啟動、資產切換、模式切換、指標匯出並符合契約 [P1][P3]
-- [ ] T021 建立 `web/src/mediapipe/demo-asset-loader.ts`，負責下載 wasm/模型與資產緩存策略 [P1][P3]
-- [ ] T022 建立 `web/src/hooks/useMediaSession.ts` React hook，整合 adapter 與狀態管理 [P1][P3]
-- [ ] T023 建立 `web/src/components/AssetSelector.tsx`，負責資產清單與快捷鍵提示 [P2]
-- [ ] T024 建立 `web/src/components/PreviewStage.tsx`，呈現 live overlay、照片 fallback 與光線提醒 [P2][P3]
-- [ ] T025 建立 `web/src/components/DeviceSwitchBanner.tsx`，提示裝置/模式切換 [P2]
-- [ ] T026 建立 `web/src/scenes/TryOnScene.tsx` 與 `web/src/main.tsx` 入口，整合路由與 providers [P1][P2]
+- [X] T017 實作 `DemoAsset` 型別與示例資料於 `web/src/models/demo-asset.ts`，提供靜態列表與授權註記 [P1][P2]
+- [X] T018 實作 `AccessibilityHint` 型別與內容於 `web/src/models/accessibility-hint.ts`，含鍵盤/觸控/閱讀器訊息 [P1][P2]
+- [X] T019 實作 `PreviewState` 與 fps buffer 輔助函式於 `web/src/models/preview-state.ts`，滿足性能指標追蹤 [P1][P3]
+- [X] T020 建立 `web/src/mediapipe/media-session-adapter.ts`，封裝 MediaPipe 任務啟動、資產切換、模式切換、指標匯出並符合契約 [P1][P3]
+- [X] T021 建立 `web/src/mediapipe/demo-asset-loader.ts`，負責下載 wasm/模型與資產緩存策略 [P1][P3]
+- [X] T022 建立 `web/src/hooks/useMediaSession.ts` React hook，整合 adapter 與狀態管理 [P1][P3]
+- [X] T023 建立 `web/src/components/AssetSelector.tsx`，負責資產清單與快捷鍵提示 [P2]
+- [X] T024 建立 `web/src/components/PreviewStage.tsx`，呈現 live overlay、照片 fallback 與光線提醒 [P2][P3]
+- [X] T025 建立 `web/src/components/DeviceSwitchBanner.tsx`，提示裝置/模式切換 [P2]
+- [X] T026 建立 `web/src/scenes/TryOnScene.tsx` 與 `web/src/main.tsx` 入口，整合路由與 providers [P1][P2]
 
 ## Phase 3.4 Integration & Instrumentation
-- [ ] T027 實作性能監控工具於 `web/src/utils/metrics.ts`，提供 rolling fps、latency 計算與 PerformanceObserver hooks [P1][P3]
-- [ ] T028 實作無障礙與手勢輔助工具於 `web/src/utils/accessibility.ts`，產生讀屏訊息與觸控手勢 mapping [P1][P2]
+- [X] T027 實作性能監控工具於 `web/src/utils/metrics.ts`，提供 rolling fps、latency 計算與 PerformanceObserver hooks [P1][P3]
+- [X] T028 實作無障礙與手勢輔助工具於 `web/src/utils/accessibility.ts`，產生讀屏訊息與觸控手勢 mapping [P1][P2]
 - [ ] T029 擴充 `web/scripts/metrics/export-session-metrics.ts` 將測試結果輸出至 `docs/demos/perf/session-metrics.json` [P3]
 - [ ] T030 在 `web/vite.config.ts` 設定可選 FastAPI proxy (`/mediapipe` route) 並記錄於 README [P1][P3]
 - [ ] T031 建立備援 `server/app.py` FastAPI 靜態代理，支援 wasm 資產轉發 [P1][P3]
