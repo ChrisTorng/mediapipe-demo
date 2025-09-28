@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { DemoAsset } from "@/models/demo-asset";
 import {
-  createMediaSessionAdapter,
   MediaSessionDependencies,
+  createMediaSessionAdapter,
 } from "@/mediapipe/media-session-adapter";
+import { DemoAsset } from "@/models/demo-asset";
 
 const mockAssets: DemoAsset[] = [
   {

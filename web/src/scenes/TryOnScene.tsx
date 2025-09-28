@@ -1,12 +1,12 @@
 import { useCallback, useEffect } from "react";
 
-import { getAccessibilityHint } from "@/models/accessibility-hint";
-import { DemoAssetId } from "@/models/demo-asset";
-import { DeviceProfile } from "@/models/preview-state";
 import { AssetSelector } from "@/components/AssetSelector";
 import { DeviceSwitchBanner } from "@/components/DeviceSwitchBanner";
 import { PreviewStage } from "@/components/PreviewStage";
 import { useMediaSession } from "@/hooks/useMediaSession";
+import { getAccessibilityHint } from "@/models/accessibility-hint";
+import { DemoAssetId } from "@/models/demo-asset";
+import { DeviceProfile } from "@/models/preview-state";
 
 function describeLighting(deviceProfile: DeviceProfile) {
   switch (deviceProfile) {
@@ -43,7 +43,7 @@ export function TryOnScene() {
         if (!cancelled) {
           await initialize();
         }
-      } catch (cause) {
+      } catch {
         if (!cancelled) {
           await toggleMode({ mode: "photo-fallback", cameraStatus: "permissionDenied" });
         }

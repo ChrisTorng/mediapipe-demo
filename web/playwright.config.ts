@@ -1,8 +1,12 @@
-import { defineConfig, devices } from "@playwright/test";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { defineConfig, devices } from "@playwright/test";
+
+const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  testDir: path.join(__dirname, "tests"),
+  testDir: path.join(rootDir, "tests"),
   timeout: 90_000,
   expect: {
     timeout: 10_000,

@@ -36,15 +36,47 @@ export function AssetSelector({
 }: AssetSelectorProps) {
   const activeAsset = assets.find((asset) => asset.id === activeAssetId);
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const focusAdjacentButton = (
+    currentButton: HTMLButtonElement,
+    direction: "previous" | "next"
+  ) => {
+    const container = currentButton.closest<HTMLDivElement>("[data-asset-container]");
+    if (!container) {
+      return;
+    }
+
+    const buttons = Array.from(
+      container.querySelectorAll<HTMLButtonElement>("button[data-asset-id]")
+    );
+    const currentIndex = buttons.indexOf(currentButton);
+    if (currentIndex === -1 || buttons.length === 0) {
+      return;
+    }
+
+    const nextIndex =
+      direction === "next"
+        ? (currentIndex + 1) % buttons.length
+        : (currentIndex - 1 + buttons.length) % buttons.length;
+
+    buttons[nextIndex]?.focus();
+  };
+
+  const handleKeyDown = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    currentAssetId: DemoAssetId
+  ) => {
     if (event.key === "ArrowRight") {
       event.preventDefault();
-      onSelect(findNextAssetId(assets, activeAssetId, "next"));
+      const nextAssetId = findNextAssetId(assets, currentAssetId, "next");
+      onSelect(nextAssetId);
+      focusAdjacentButton(event.currentTarget, "next");
     }
 
     if (event.key === "ArrowLeft") {
       event.preventDefault();
-      onSelect(findNextAssetId(assets, activeAssetId, "previous"));
+      const previousAssetId = findNextAssetId(assets, currentAssetId, "previous");
+      onSelect(previousAssetId);
+      focusAdjacentButton(event.currentTarget, "previous");
     }
   };
 
@@ -76,8 +108,7 @@ export function AssetSelector({
         className="mt-4 grid gap-2 sm:grid-cols-3"
         role="group"
         aria-label="試戴資產列表"
-        tabIndex={0}
-        onKeyDown={handleKeyDown}
+        data-asset-container
       >
         {assets.map((asset) => {
           const isActive = asset.id === activeAssetId;
@@ -86,6 +117,7 @@ export function AssetSelector({
               key={asset.id}
               type="button"
               onClick={() => onSelect(asset.id)}
+              onKeyDown={(event) => handleKeyDown(event, asset.id)}
               className={`rounded-lg border px-4 py-3 text-left transition-colors focus-visible:bg-brand-primary/10 focus-visible:outline-none ${
                 isActive
                   ? "border-brand-primary bg-brand-primary/10 text-brand-primary"
@@ -93,6 +125,7 @@ export function AssetSelector({
               }`}
               aria-pressed={isActive}
               data-testid={`asset-card-${asset.id}`}
+              data-asset-id={asset.id}
             >
               <span className="block text-base font-medium">{asset.label}</span>
               <span className="mt-1 block text-xs text-text-secondary">{asset.mediaType}</span>

@@ -3,18 +3,11 @@ import {
   CameraStatus,
   PreviewMode,
   PreviewState,
-  calculateLatencyMs,
-  calculateRollingFps,
   createInitialPreviewState,
-  pushFpsSample,
 } from "@/models/preview-state";
-
-import {
-  createDemoAssetLoader,
-  DemoAssetLoader,
-} from "./demo-asset-loader";
-
 import { createMetricsTracker } from "@/utils/metrics";
+
+import { createDemoAssetLoader, DemoAssetLoader } from "./demo-asset-loader";
 
 export interface InitializeSessionInput {
   assetId: DemoAssetId;

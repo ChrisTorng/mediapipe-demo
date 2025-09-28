@@ -1,4 +1,5 @@
 import { Buffer } from "node:buffer";
+
 import { expect, test } from "@playwright/test";
 
 const SAMPLE_IMAGE_BASE64 =

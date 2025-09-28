@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { DemoAsset } from "@/models/demo-asset";
 import {
-  createMediaSessionAdapter,
   MediaSessionError,
+  createMediaSessionAdapter,
 } from "@/mediapipe/media-session-adapter";
+import { DemoAsset } from "@/models/demo-asset";
 
 const mockAssets: DemoAsset[] = [
   {
@@ -40,8 +40,9 @@ describe("switchAsset 契約", () => {
 
     await adapter.initializeSession({ assetId: "glasses", deviceProfile: "desktop" });
 
-    await expect(
-      adapter.switchAsset({ assetId: "invalid-asset" as never })
-    ).rejects.toMatchObject<MediaSessionError>({ statusCode: 422 });
+    const request = adapter.switchAsset({ assetId: "invalid-asset" as never });
+
+    await expect(request).rejects.toBeInstanceOf(MediaSessionError);
+    await expect(request).rejects.toMatchObject({ statusCode: 422 });
   });
 });

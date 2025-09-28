@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { listDemoAssets } from "@/models/demo-asset";
-import { PreviewState, createInitialPreviewState } from "@/models/preview-state";
 import {
   InitializeSessionInput,
   MetricsResponse,
@@ -10,6 +8,8 @@ import {
   ToggleModeInput,
   createMediaSessionAdapter,
 } from "@/mediapipe/media-session-adapter";
+import { listDemoAssets } from "@/models/demo-asset";
+import { PreviewState, createInitialPreviewState } from "@/models/preview-state";
 
 declare global {
   interface Window {
