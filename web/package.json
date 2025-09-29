@@ -11,7 +11,7 @@
         "format": "prettier . --write",
         "format:check": "prettier . --check",
         "check:constitution": "npm run lint && npm run lint:styles && npm run format:check",
-        "test:unit": "vitest",
+    "test:unit": "vitest run",
         "test:e2e": "playwright test",
         "test:perf": "node scripts/lighthouse/run-lighthouse.mjs",
         "postinstall": "tsx scripts/mediapipe/fetch-models.ts"
