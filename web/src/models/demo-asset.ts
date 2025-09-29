@@ -27,7 +27,7 @@ export const DEMO_ASSETS: DemoAsset[] = [
     id: "glasses",
     label: "眼鏡",
     mediaType: "overlay",
-  sourceUri: "/assets/glasses-overlay.svg",
+  sourceUri: "/assets/sun_glasses_fbx_346kb.glb",
     modelConfig: {
       taskAssetPath:
         "/mediapipe/face_landmarker.task",

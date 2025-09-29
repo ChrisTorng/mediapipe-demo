@@ -5,6 +5,8 @@ import { useTryOnProcessor } from "@/mediapipe/try-on-processor";
 import { DemoAsset, DemoAssetMediaType } from "@/models/demo-asset";
 import { CameraStatus, PreviewState } from "@/models/preview-state";
 
+import { GlassesOverlay } from "./GlassesOverlay";
+
 function getOverlayEnhancements(mediaType?: DemoAssetMediaType): string {
   switch (mediaType) {
     case "overlay":
@@ -79,11 +81,42 @@ export function PreviewStage({
   const frameRequestRef = useRef<number>();
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const overlayRef = useRef<HTMLImageElement | null>(null);
+  const overlayRef = useRef<HTMLElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [isInitializingCamera, setIsInitializingCamera] = useState<boolean>(false);
   const [livePreviewError, setLivePreviewError] = useState<string | null>(null);
   const tryOnProcessor = useTryOnProcessor();
+
+  const assignOverlayRef = useCallback(
+    (element: HTMLElement | null) => {
+      overlayRef.current = element;
+      tryOnProcessor.setOverlayElement(element ?? null);
+
+      if (!element) {
+        tryOnProcessor.detach();
+        return;
+      }
+
+      if (state.mode === "live" && videoRef.current) {
+        tryOnProcessor.attach(videoRef.current, element);
+      }
+    },
+    [state.mode, tryOnProcessor]
+  );
+
+  const handleGlassesOverlayRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      assignOverlayRef(element);
+    },
+    [assignOverlayRef]
+  );
+
+  const handleImageOverlayRef = useCallback(
+    (element: HTMLImageElement | null) => {
+      assignOverlayRef(element);
+    },
+    [assignOverlayRef]
+  );
 
   useEffect(() => {
     function renderFrame(timestamp: number) {
@@ -220,32 +253,31 @@ export function PreviewStage({
   useEffect(() => () => stopLiveStream(), [stopLiveStream]);
 
   useEffect(() => {
-    const overlay = overlayRef.current;
-    tryOnProcessor.setOverlayElement(overlay ?? null);
     tryOnProcessor.setMode(state.mode);
 
     if (!activeAsset) {
+      assignOverlayRef(null);
       return;
     }
 
     void tryOnProcessor.setAsset(activeAsset);
 
     if (state.mode !== "live") {
+      tryOnProcessor.detach();
       return;
     }
 
+    const overlay = overlayRef.current;
     const video = videoRef.current;
 
-    if (!video || !overlay) {
-      return;
+    if (overlay && video) {
+      tryOnProcessor.attach(video, overlay);
     }
-
-    tryOnProcessor.attach(video, overlay);
 
     return () => {
       tryOnProcessor.detach();
     };
-  }, [activeAsset, state.mode, tryOnProcessor]);
+  }, [activeAsset, assignOverlayRef, state.mode, tryOnProcessor]);
 
   useEffect(() => {
     if (state.mode !== "photo-fallback" || !uploadedPhotoUrl || !activeAsset) {
@@ -323,7 +355,6 @@ export function PreviewStage({
       "absolute",
       "z-10",
       "select-none",
-      "object-contain",
       "transition-transform",
       "transition-opacity",
       "duration-300",
@@ -364,16 +395,24 @@ export function PreviewStage({
             />
 
             {activeAsset ? (
-              <img
-                ref={overlayRef}
-                src={activeAsset.sourceUri}
-                alt=""
-                aria-hidden="true"
-                role="presentation"
-                className={overlayClassName}
-                data-testid="asset-overlay"
-                draggable={false}
-              />
+              activeAsset.id === "glasses" ? (
+                <GlassesOverlay
+                  ref={handleGlassesOverlayRef}
+                  className={overlayClassName}
+                  data-testid="asset-overlay"
+                />
+              ) : (
+                <img
+                  ref={handleImageOverlayRef}
+                  src={activeAsset.sourceUri}
+                  alt=""
+                  aria-hidden="true"
+                  role="presentation"
+                  className={`${overlayClassName} object-contain`}
+                  data-testid="asset-overlay"
+                  draggable={false}
+                />
+              )
             ) : null}
 
             {(isInitializingCamera || livePreviewError) ? (
@@ -412,16 +451,24 @@ export function PreviewStage({
             </div>
 
             {activeAsset ? (
-              <img
-                ref={overlayRef}
-                src={activeAsset.sourceUri}
-                alt=""
-                aria-hidden="true"
-                role="presentation"
-                className={overlayClassName}
-                data-testid="asset-overlay"
-                draggable={false}
-              />
+              activeAsset.id === "glasses" ? (
+                <GlassesOverlay
+                  ref={handleGlassesOverlayRef}
+                  className={overlayClassName}
+                  data-testid="asset-overlay"
+                />
+              ) : (
+                <img
+                  ref={handleImageOverlayRef}
+                  src={activeAsset.sourceUri}
+                  alt=""
+                  aria-hidden="true"
+                  role="presentation"
+                  className={`${overlayClassName} object-contain`}
+                  data-testid="asset-overlay"
+                  draggable={false}
+                />
+              )
             ) : null}
           </>
         )}

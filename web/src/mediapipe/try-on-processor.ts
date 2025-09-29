@@ -18,6 +18,7 @@ const POSE_LANDMARKER_MODEL_PATH = "/mediapipe/pose_landmarker_full.task";
 const PROCESS_INTERVAL_MS = 33; // ~30 FPS processing cadence
 const SMOOTHING_ALPHA = 0.35;
 const MAX_MISSED_DETECTIONS = 6;
+const GLASSES_HEIGHT_RATIO = 0.45;
 
 interface OverlayMeasurement {
   centerX: number;
@@ -95,7 +96,7 @@ class TryOnProcessor {
   private poseLandmarker: PoseLandmarker | null = null;
   private poseLandmarkerReady = false;
 
-  private overlayElement: HTMLImageElement | null = null;
+  private overlayElement: HTMLElement | null = null;
   private videoElement: HTMLVideoElement | null = null;
   private activeAssetId: DemoAssetId | null = null;
   private mode: PreviewMode = "live";
@@ -139,7 +140,7 @@ class TryOnProcessor {
     }
   }
 
-  attach(video: HTMLVideoElement, overlay: HTMLImageElement) {
+  attach(video: HTMLVideoElement, overlay: HTMLElement) {
     this.videoElement = video;
     this.setOverlayElement(overlay);
   }
@@ -149,7 +150,7 @@ class TryOnProcessor {
     this.setOverlayElement(null);
   }
 
-  setOverlayElement(element: HTMLImageElement | null) {
+  setOverlayElement(element: HTMLElement | null) {
     this.overlayElement = element;
 
     if (!element) {
@@ -220,7 +221,7 @@ class TryOnProcessor {
 
     switch (this.activeAssetId) {
       case "glasses":
-      case "makeup":
+      case "makeup": {
         await this.ensureFaceLandmarkerMode("IMAGE");
         if (!this.faceLandmarkerReady || !this.faceLandmarker) {
           return;
@@ -240,6 +241,7 @@ class TryOnProcessor {
           this.activeAssetId
         );
         break;
+      }
       case "shoes":
         // Pose landmarker does not operate on static images in this demo.
         break;
@@ -476,12 +478,14 @@ class TryOnProcessor {
       const centerX = (leftEye.x + rightEye.x) / 2;
       const centerY = (leftEye.y + rightEye.y) / 2 + eyeDistance * 0.05;
       const width = eyeDistance * 2.2;
+      const height = width * GLASSES_HEIGHT_RATIO;
 
       this.applyOverlay(
         {
           centerX,
           centerY,
           width,
+          height,
           rotationRad,
           visible: true,
         },
