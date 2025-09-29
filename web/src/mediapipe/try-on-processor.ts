@@ -28,6 +28,11 @@ interface OverlayMeasurement {
   visible: boolean;
 }
 
+interface FrameDimensions {
+  width: number;
+  height: number;
+}
+
 interface PixelPoint {
   x: number;
   y: number;
@@ -101,6 +106,7 @@ class TryOnProcessor {
   private missedDetections = MAX_MISSED_DETECTIONS;
 
   private smoothedMeasurement: OverlayMeasurement | null = null;
+  private lastProjectionKey: string | null = null;
 
   async setAsset(asset: DemoAsset): Promise<void> {
     if (this.activeAssetId !== asset.id) {
@@ -140,7 +146,7 @@ class TryOnProcessor {
 
   detach() {
     this.videoElement = null;
-    this.overlayElement = null;
+    this.setOverlayElement(null);
   }
 
   setOverlayElement(element: HTMLImageElement | null) {
@@ -148,6 +154,7 @@ class TryOnProcessor {
 
     if (!element) {
       this.smoothedMeasurement = null;
+      this.lastProjectionKey = null;
     }
   }
 
@@ -218,10 +225,18 @@ class TryOnProcessor {
         if (!this.faceLandmarkerReady || !this.faceLandmarker) {
           return;
         }
+        const frameWidth = image instanceof HTMLImageElement ? image.naturalWidth || image.width : image.width;
+        const frameHeight = image instanceof HTMLImageElement ? image.naturalHeight || image.height : image.height;
+
+        if (!frameWidth || !frameHeight) {
+          this.registerMissedDetection();
+          return;
+        }
+
         this.applyFaceMeasurement(
           this.faceLandmarker.detect(image)?.faceLandmarks?.[0] ?? null,
-          image.width,
-          image.height,
+          frameWidth,
+          frameHeight,
           this.activeAssetId
         );
         break;
@@ -240,6 +255,7 @@ class TryOnProcessor {
     this.faceLandmarkerReady = false;
     this.faceLandmarkerRunningMode = "VIDEO";
     this.faceLandmarkerModeTransition = null;
+    this.lastProjectionKey = null;
 
     void this.segmenter?.close?.();
     this.segmenter = null;
@@ -409,14 +425,17 @@ class TryOnProcessor {
     const overlayHeight = overlayWidth * 0.55;
     const rotationRad = Math.atan2(rightToe.y - leftToe.y, rightToe.x - leftToe.x);
 
-    this.applyOverlay({
-      centerX,
-      centerY,
-      width: overlayWidth,
-      height: overlayHeight,
-      rotationRad,
-      visible: true,
-    });
+    this.applyOverlay(
+      {
+        centerX,
+        centerY,
+        width: overlayWidth,
+        height: overlayHeight,
+        rotationRad,
+        visible: true,
+      },
+      { width, height }
+    );
   }
 
   private applyFaceMeasurement(
@@ -458,13 +477,16 @@ class TryOnProcessor {
       const centerY = (leftEye.y + rightEye.y) / 2 + eyeDistance * 0.05;
       const width = eyeDistance * 2.2;
 
-      this.applyOverlay({
-        centerX,
-        centerY,
-        width,
-        rotationRad,
-        visible: true,
-      });
+      this.applyOverlay(
+        {
+          centerX,
+          centerY,
+          width,
+          rotationRad,
+          visible: true,
+        },
+        { width: frameWidth, height: frameHeight }
+      );
       return;
     }
 
@@ -484,17 +506,20 @@ class TryOnProcessor {
     const centerY = foreheadPoint.y + faceHeight * 0.55;
     const cheekRotation = Math.atan2(cheekRight.y - cheekLeft.y, cheekRight.x - cheekLeft.x);
 
-    this.applyOverlay({
-      centerX,
-      centerY,
-      width: faceWidth,
-      height: faceHeight,
-      rotationRad: cheekRotation,
-      visible: true,
-    });
+    this.applyOverlay(
+      {
+        centerX,
+        centerY,
+        width: faceWidth,
+        height: faceHeight,
+        rotationRad: cheekRotation,
+        visible: true,
+      },
+      { width: frameWidth, height: frameHeight }
+    );
   }
 
-  private applyOverlay(measurement: OverlayMeasurement) {
+  private applyOverlay(measurement: OverlayMeasurement, frame: FrameDimensions) {
     const overlay = this.overlayElement;
 
     if (!overlay) {
@@ -508,7 +533,8 @@ class TryOnProcessor {
 
     this.missedDetections = 0;
 
-    const smoothed = this.smoothMeasurement(measurement);
+    const projected = this.projectMeasurement(measurement, frame);
+    const smoothed = this.smoothMeasurement(projected);
 
     overlay.style.opacity = "";
     overlay.style.left = `${smoothed.centerX}px`;
@@ -557,6 +583,7 @@ class TryOnProcessor {
 
     this.overlayElement.style.opacity = "0";
     this.smoothedMeasurement = null;
+    this.lastProjectionKey = null;
   }
 
   private registerMissedDetection() {
@@ -570,6 +597,7 @@ class TryOnProcessor {
   private resetOverlayState() {
     this.smoothedMeasurement = null;
     this.missedDetections = MAX_MISSED_DETECTIONS;
+    this.lastProjectionKey = null;
   }
 
   private async ensureFaceLandmarkerMode(mode: "VIDEO" | "IMAGE"): Promise<void> {
@@ -615,6 +643,71 @@ class TryOnProcessor {
     } finally {
       this.faceLandmarkerModeTransition = null;
     }
+  }
+
+  private projectMeasurement(measurement: OverlayMeasurement, frame: FrameDimensions): OverlayMeasurement {
+    const overlay = this.overlayElement;
+    const container = overlay?.parentElement as HTMLElement | null;
+
+    if (!container) {
+      return measurement;
+    }
+
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+
+    if (!containerWidth || !containerHeight || !frame.width || !frame.height) {
+      return measurement;
+    }
+
+    const projectionKey = `${containerWidth}x${containerHeight}:${frame.width}x${frame.height}:${this.mode}`;
+
+    if (this.lastProjectionKey && this.lastProjectionKey !== projectionKey) {
+      this.smoothedMeasurement = null;
+    }
+    this.lastProjectionKey = projectionKey;
+
+    let scale: number;
+
+    if (this.mode === "live") {
+      scale = Math.max(containerWidth / frame.width, containerHeight / frame.height);
+
+      if (!isFinite(scale) || scale <= 0) {
+        return measurement;
+      }
+
+      const displayWidth = frame.width * scale;
+      const displayHeight = frame.height * scale;
+      const offsetX = (displayWidth - containerWidth) / 2;
+      const offsetY = (displayHeight - containerHeight) / 2;
+
+      return {
+        ...measurement,
+        centerX: measurement.centerX * scale - offsetX,
+        centerY: measurement.centerY * scale - offsetY,
+        width: measurement.width * scale,
+        height: typeof measurement.height === "number" ? measurement.height * scale : undefined,
+      };
+    }
+
+    scale = Math.min(containerWidth / frame.width, containerHeight / frame.height);
+
+    if (!isFinite(scale) || scale <= 0) {
+      return measurement;
+    }
+
+    const displayWidth = frame.width * scale;
+    const displayHeight = frame.height * scale;
+    const padX = (containerWidth - displayWidth) / 2;
+    const padY = (containerHeight - displayHeight) / 2;
+
+    return {
+      ...measurement,
+      centerX: padX + measurement.centerX * scale,
+      centerY: padY + measurement.centerY * scale,
+      width: measurement.width * scale,
+      height: typeof measurement.height === "number" ? measurement.height * scale : undefined,
+    };
   }
 }
 
