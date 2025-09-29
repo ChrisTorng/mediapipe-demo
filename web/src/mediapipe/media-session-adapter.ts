@@ -74,8 +74,8 @@ export function createMediaSessionAdapter(
   const assetMap = new Map<DemoAssetId, DemoAsset>(assets.map((asset) => [asset.id, asset]));
   const loader = deps.loader ?? createDemoAssetLoader({ assets });
   const listeners = new Set<(state: PreviewState) => void>();
-  const now = deps.now ?? (() => Date.now());
-  const metricsTracker = createMetricsTracker({ now });
+  const now = deps.now;
+  const metricsTracker = createMetricsTracker(now ? { now } : {});
 
   let state: PreviewState = {
     ...createInitialPreviewState(),

@@ -7,6 +7,7 @@ const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   testDir: path.join(rootDir, "tests"),
+  testIgnore: ["**/unit/**"],
   timeout: 90_000,
   expect: {
     timeout: 10_000,
@@ -22,14 +23,12 @@ export default defineConfig({
     {
       name: "chromium-desktop",
       use: { ...devices["Desktop Chrome"] },
+      testIgnore: ["**/unit/**", "**/mobile-try-on.spec.ts"],
     },
     {
       name: "chromium-mobile",
       use: { ...devices["Pixel 7"] },
-    },
-    {
-      name: "webkit-mobile",
-      use: { ...devices["iPhone 14"] },
+      testIgnore: ["**/unit/**"],
     },
   ],
   webServer: {

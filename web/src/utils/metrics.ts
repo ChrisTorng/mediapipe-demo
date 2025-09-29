@@ -26,7 +26,14 @@ export interface MetricsTracker {
 }
 
 export function createMetricsTracker(options: MetricsTrackerOptions = {}): MetricsTracker {
-  const now = options.now ?? (() => Date.now());
+  const resolveNow = () => {
+    if (typeof performance !== "undefined" && typeof performance.now === "function") {
+      return performance.now();
+    }
+    return Date.now();
+  };
+
+  const now = options.now ?? resolveNow;
   const sampleSize = options.sampleSize ?? 30;
   const maxHistory = options.historyLength ?? 60;
 

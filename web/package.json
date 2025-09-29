@@ -13,7 +13,7 @@
         "check:constitution": "npm run lint && npm run lint:styles && npm run format:check",
     "test:unit": "vitest run",
         "test:e2e": "playwright test",
-        "test:perf": "node scripts/lighthouse/run-lighthouse.mjs",
+    "test:perf": "tsx scripts/metrics/export-session-metrics.ts",
         "postinstall": "tsx scripts/mediapipe/fetch-models.ts"
     },
     "dependencies": {

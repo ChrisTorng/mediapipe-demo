@@ -26,6 +26,20 @@ function detectDeviceProfile(): InitializeSessionInput["deviceProfile"] {
     return "desktop";
   }
 
+  const uaData = (navigator as Navigator & { userAgentData?: { mobile?: boolean; platform?: string } }).userAgentData;
+  if (uaData?.mobile) {
+    return "mobile";
+  }
+
+  const ua = navigator.userAgent.toLowerCase();
+  if (/android|iphone|ipod|mobile/i.test(ua)) {
+    return "mobile";
+  }
+
+  if (/ipad|tablet/i.test(ua)) {
+    return "tablet";
+  }
+
   const width = window.innerWidth;
 
   if (width <= 768) {
@@ -75,6 +89,16 @@ export function useMediaSession(): UseMediaSessionResult {
     }
     return adapterRef.current;
   }, [assets]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    setState((previous) => ({
+      ...previous,
+      deviceProfile: detectDeviceProfile(),
+    }));
+  }, []);
 
   useEffect(() => {
     const unsubscribe = adapter.subscribe((nextState: PreviewState) => {

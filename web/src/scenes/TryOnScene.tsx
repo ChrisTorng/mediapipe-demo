@@ -36,16 +36,48 @@ export function TryOnScene() {
     let cancelled = false;
 
     async function bootstrap() {
+      let fallbackInput: Parameters<typeof toggleMode>[0] | null = null;
       try {
         if (navigator.mediaDevices?.getUserMedia) {
           await navigator.mediaDevices.getUserMedia({ video: true });
         }
+      } catch (error) {
+        let permissionState: PermissionState | null = null;
+        if (typeof navigator !== "undefined" && navigator.permissions?.query) {
+          try {
+            const status = await navigator.permissions.query({
+              name: "camera" as PermissionName,
+            });
+            permissionState = status.state;
+          } catch (permissionError) {
+            console.warn(permissionError);
+          }
+        }
+
+        const name = error instanceof DOMException ? error.name : undefined;
+
+        if (permissionState === "granted") {
+          fallbackInput = null;
+        } else {
+          const cameraStatus = name === "NotAllowedError" ? "permissionDenied" : "unavailable";
+          fallbackInput = { mode: "photo-fallback", cameraStatus };
+        }
+      }
+
+      try {
         if (!cancelled) {
           await initialize();
         }
-      } catch {
-        if (!cancelled) {
-          await toggleMode({ mode: "photo-fallback", cameraStatus: "permissionDenied" });
+      } catch (cause) {
+        console.error(cause);
+        return;
+      }
+
+      if (!cancelled && fallbackInput) {
+        try {
+          await toggleMode(fallbackInput);
+        } catch (cause) {
+          console.error(cause);
         }
       }
     }
