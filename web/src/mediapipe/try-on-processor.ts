@@ -79,6 +79,8 @@ class TryOnProcessor {
   private faceLandmarkerPromise: Promise<FaceLandmarker> | null = null;
   private faceLandmarker: FaceLandmarker | null = null;
   private faceLandmarkerReady = false;
+  private faceLandmarkerRunningMode: "VIDEO" | "IMAGE" = "VIDEO";
+  private faceLandmarkerModeTransition: Promise<void> | null = null;
 
   private segmenterPromise: Promise<ImageSegmenter> | null = null;
   private segmenter: ImageSegmenter | null = null;
@@ -109,6 +111,8 @@ class TryOnProcessor {
 
     if (asset.id === "glasses" || asset.id === "makeup") {
       await this.loadFaceLandmarker();
+      const desiredMode = this.mode === "photo-fallback" ? "IMAGE" : "VIDEO";
+      await this.ensureFaceLandmarkerMode(desiredMode);
     }
 
     if (asset.id === "makeup") {
@@ -122,6 +126,11 @@ class TryOnProcessor {
 
   setMode(mode: PreviewMode) {
     this.mode = mode;
+
+    if (this.activeAssetId === "glasses" || this.activeAssetId === "makeup") {
+      const desiredMode = mode === "photo-fallback" ? "IMAGE" : "VIDEO";
+      void this.ensureFaceLandmarkerMode(desiredMode);
+    }
   }
 
   attach(video: HTMLVideoElement, overlay: HTMLImageElement) {
@@ -193,7 +202,7 @@ class TryOnProcessor {
     }
   }
 
-  processImageFrame(image: HTMLImageElement | HTMLCanvasElement) {
+  async processImageFrame(image: HTMLImageElement | HTMLCanvasElement): Promise<void> {
     if (!this.overlayElement || !this.activeAssetId) {
       return;
     }
@@ -205,6 +214,7 @@ class TryOnProcessor {
     switch (this.activeAssetId) {
       case "glasses":
       case "makeup":
+        await this.ensureFaceLandmarkerMode("IMAGE");
         if (!this.faceLandmarkerReady || !this.faceLandmarker) {
           return;
         }
@@ -228,6 +238,8 @@ class TryOnProcessor {
     this.faceLandmarker = null;
     this.faceLandmarkerPromise = null;
     this.faceLandmarkerReady = false;
+    this.faceLandmarkerRunningMode = "VIDEO";
+    this.faceLandmarkerModeTransition = null;
 
     void this.segmenter?.close?.();
     this.segmenter = null;
@@ -261,6 +273,8 @@ class TryOnProcessor {
 
         this.faceLandmarker = instance;
         this.faceLandmarkerReady = true;
+        this.faceLandmarkerRunningMode = "VIDEO";
+        this.faceLandmarkerModeTransition = null;
         return instance;
       })();
     }
@@ -323,6 +337,11 @@ class TryOnProcessor {
       return;
     }
 
+    if (this.faceLandmarkerRunningMode !== "VIDEO") {
+      void this.ensureFaceLandmarkerMode("VIDEO");
+      return;
+    }
+
     const result = this.faceLandmarker.detectForVideo(this.videoElement, timestamp);
     const faceLandmarks = result.faceLandmarks?.[0];
 
@@ -331,6 +350,11 @@ class TryOnProcessor {
 
   private processMakeupFrame(timestamp: number) {
     if (!this.faceLandmarkerReady || !this.faceLandmarker || !this.videoElement) {
+      return;
+    }
+
+    if (this.faceLandmarkerRunningMode !== "VIDEO") {
+      void this.ensureFaceLandmarkerMode("VIDEO");
       return;
     }
 
@@ -546,6 +570,51 @@ class TryOnProcessor {
   private resetOverlayState() {
     this.smoothedMeasurement = null;
     this.missedDetections = MAX_MISSED_DETECTIONS;
+  }
+
+  private async ensureFaceLandmarkerMode(mode: "VIDEO" | "IMAGE"): Promise<void> {
+    if (!this.faceLandmarkerPromise) {
+      return;
+    }
+
+    if (!this.faceLandmarkerReady || !this.faceLandmarker) {
+      try {
+        await this.faceLandmarkerPromise;
+      } catch (error) {
+        console.error("面部關鍵點模型載入失敗", error);
+        return;
+      }
+    }
+
+    const faceLandmarker = this.faceLandmarker;
+
+    if (!faceLandmarker || this.faceLandmarkerRunningMode === mode) {
+      return;
+    }
+
+    if (this.faceLandmarkerModeTransition) {
+      try {
+        await this.faceLandmarkerModeTransition;
+      } catch (error) {
+        console.error("切換面部關鍵點模式時發生錯誤", error);
+      }
+    }
+
+    if (this.faceLandmarkerRunningMode === mode || !this.faceLandmarker) {
+      return;
+    }
+
+    const transition = faceLandmarker.setOptions({ runningMode: mode });
+    this.faceLandmarkerModeTransition = transition;
+
+    try {
+      await transition;
+      this.faceLandmarkerRunningMode = mode;
+    } catch (error) {
+      console.error("設定面部關鍵點模式失敗", error);
+    } finally {
+      this.faceLandmarkerModeTransition = null;
+    }
   }
 }
 

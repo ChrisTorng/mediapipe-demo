@@ -33,6 +33,32 @@ function getOverlayOpacity(mediaType: DemoAssetMediaType | undefined, visible: b
   }
 }
 
+function getCameraStatusLabel(status: CameraStatus, mode: PreviewState["mode"]): string {
+  if (mode === "photo-fallback") {
+    switch (status) {
+      case "permissionDenied":
+        return "照片模式（鏡頭權限遭拒）";
+      case "unavailable":
+        return "照片模式（鏡頭不可用）";
+      case "ready":
+        return "照片模式";
+      default:
+        return "照片模式（準備中）";
+    }
+  }
+
+  switch (status) {
+    case "ready":
+      return "鏡頭就緒";
+    case "permissionDenied":
+      return "鏡頭權限遭拒";
+    case "unavailable":
+      return "鏡頭不可用";
+    default:
+      return "鏡頭初始化中";
+  }
+}
+
 export interface PreviewStageProps {
   state: PreviewState;
   metrics: MetricsResponse;
@@ -241,7 +267,7 @@ export function PreviewStage({
       tryOnProcessor.setOverlayElement(overlay);
       await tryOnProcessor.setAsset(activeAsset);
       tryOnProcessor.setOverlayEnabled(true);
-      tryOnProcessor.processImageFrame(image);
+      await tryOnProcessor.processImageFrame(image);
     };
 
     return () => {
@@ -277,6 +303,11 @@ export function PreviewStage({
 
     return Boolean(uploadedPhotoUrl);
   }, [activeAsset, state.cameraStatus, state.mode, livePreviewError, isInitializingCamera, uploadedPhotoUrl]);
+
+  const cameraStatusLabel = useMemo(
+    () => getCameraStatusLabel(state.cameraStatus, state.mode),
+    [state.cameraStatus, state.mode]
+  );
 
   useEffect(() => {
     tryOnProcessor.setOverlayEnabled(shouldShowOverlay);
@@ -317,7 +348,7 @@ export function PreviewStage({
     >
       <div className="flex items-center justify-between px-4 py-2 text-sm text-text-secondary">
         <span data-testid="device-indicator">{state.deviceProfile}</span>
-        <span data-testid="camera-status">{state.cameraStatus}</span>
+        <span data-testid="camera-status">{cameraStatusLabel}</span>
       </div>
 
       <div className="relative flex h-64 w-full items-center justify-center bg-neutral-900 text-neutral-200">
