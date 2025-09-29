@@ -61,5 +61,8 @@ describe("initializeSession 契約", () => {
     const state = adapter.getState();
     expect(state.activeAssetId).toBe("glasses");
     expect(state.deviceProfile).toBe("mobile");
+
+    adapter.updateCameraStatus("permissionDenied");
+    expect(adapter.getState().cameraStatus).toBe("permissionDenied");
   });
 });

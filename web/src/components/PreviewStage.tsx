@@ -1,18 +1,29 @@
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { MetricsResponse } from "@/mediapipe/media-session-adapter";
-import { PreviewState } from "@/models/preview-state";
+import { CameraStatus, PreviewState } from "@/models/preview-state";
 
 export interface PreviewStageProps {
   state: PreviewState;
   metrics: MetricsResponse;
   onFrame: (timestamp?: number) => void;
   onUploadPhoto: (file: File) => void;
+  onCameraStatusChange?: (status: CameraStatus) => void;
 }
 
-export function PreviewStage({ state, metrics, onFrame, onUploadPhoto }: PreviewStageProps) {
+export function PreviewStage({
+  state,
+  metrics,
+  onFrame,
+  onUploadPhoto,
+  onCameraStatusChange,
+}: PreviewStageProps) {
   const frameRequestRef = useRef<number>();
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [isInitializingCamera, setIsInitializingCamera] = useState<boolean>(false);
+  const [livePreviewError, setLivePreviewError] = useState<string | null>(null);
 
   useEffect(() => {
     function renderFrame(timestamp: number) {
@@ -34,6 +45,114 @@ export function PreviewStage({ state, metrics, onFrame, onUploadPhoto }: Preview
       setUploadedPhotoUrl(null);
     }
   }, [state.mode]);
+
+  const stopLiveStream = useCallback(() => {
+    const stream = streamRef.current;
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+
+    const video = videoRef.current;
+    if (video) {
+      video.srcObject = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (state.mode !== "live") {
+      stopLiveStream();
+      setLivePreviewError(null);
+      return;
+    }
+
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setLivePreviewError("此裝置不支援鏡頭或瀏覽器已停用相關功能。");
+      onCameraStatusChange?.("unavailable");
+      setIsInitializingCamera(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function startStream() {
+      if (streamRef.current) {
+        const video = videoRef.current;
+        if (video && video.srcObject !== streamRef.current) {
+          video.srcObject = streamRef.current;
+        }
+        return;
+      }
+
+      try {
+        setIsInitializingCamera(true);
+        onCameraStatusChange?.("initializing");
+
+        const constraints: MediaStreamConstraints = {
+          audio: false,
+          video:
+            state.deviceProfile === "desktop"
+              ? {
+                  width: { ideal: 1280 },
+                  height: { ideal: 720 },
+                }
+              : {
+                  facingMode: "user",
+                },
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+        if (cancelled) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+
+        streamRef.current = stream;
+        const video = videoRef.current;
+
+        if (video) {
+          video.srcObject = stream;
+          video.muted = true;
+          try {
+            await video.play();
+          } catch {
+            const handleLoadedMetadata = () => {
+              video.play().catch(() => undefined);
+              video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+            };
+            video.addEventListener("loadedmetadata", handleLoadedMetadata);
+          }
+        }
+
+        onCameraStatusChange?.("ready");
+        setLivePreviewError(null);
+      } catch (error) {
+        console.error(error);
+        const domError = error instanceof DOMException ? error : null;
+        const isPermissionDenied = domError?.name === "NotAllowedError";
+
+        const message = isPermissionDenied
+          ? "鏡頭權限遭拒，請於瀏覽器設定中允許存取。"
+          : "鏡頭啟動失敗，請確認裝置與權限設定。";
+
+        setLivePreviewError(message);
+        onCameraStatusChange?.(isPermissionDenied ? "permissionDenied" : "unavailable");
+      } finally {
+        if (!cancelled) {
+          setIsInitializingCamera(false);
+        }
+      }
+    }
+
+    void startStream();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [state.mode, state.deviceProfile, onCameraStatusChange, stopLiveStream]);
+
+  useEffect(() => () => stopLiveStream(), [stopLiveStream]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -65,9 +184,33 @@ export function PreviewStage({ state, metrics, onFrame, onUploadPhoto }: Preview
 
       <div className="flex h-64 items-center justify-center bg-neutral-900 text-neutral-200">
         {state.mode === "live" ? (
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-lg font-semibold">Live Preview Placeholder</span>
-            <span className="text-xs text-neutral-400">鏡頭畫面將顯示於此</span>
+          <div className="relative h-full w-full">
+            <video
+              ref={videoRef}
+              className={`h-full w-full object-cover transition-opacity duration-300 ${livePreviewError ? "opacity-20" : "opacity-100"}`}
+              playsInline
+              autoPlay
+              muted
+              data-testid="live-video"
+            />
+
+            {(isInitializingCamera || livePreviewError) ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-neutral-900/80 px-6 text-center">
+                {isInitializingCamera && !livePreviewError ? (
+                  <>
+                    <span className="text-lg font-semibold">啟動鏡頭中…</span>
+                    <span className="text-xs text-neutral-300">請確認已允許鏡頭權限或稍候片刻</span>
+                  </>
+                ) : null}
+
+                {livePreviewError ? (
+                  <>
+                    <span className="text-lg font-semibold">無法顯示鏡頭</span>
+                    <span className="text-xs text-neutral-300">{livePreviewError}</span>
+                  </>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">

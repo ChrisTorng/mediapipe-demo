@@ -9,7 +9,7 @@ import {
   createMediaSessionAdapter,
 } from "@/mediapipe/media-session-adapter";
 import { listDemoAssets } from "@/models/demo-asset";
-import { PreviewState, createInitialPreviewState } from "@/models/preview-state";
+import { CameraStatus, PreviewState, createInitialPreviewState } from "@/models/preview-state";
 
 declare global {
   interface Window {
@@ -72,6 +72,7 @@ export interface UseMediaSessionResult {
   switchAsset: (assetId: InitializeSessionInput["assetId"]) => Promise<void>;
   toggleMode: (input: ToggleModeInput) => Promise<void>;
   recordFrame: (timestamp?: number) => void;
+  updateCameraStatus: (status: CameraStatus) => void;
   refreshMetrics: () => Promise<void>;
 }
 
@@ -169,6 +170,13 @@ export function useMediaSession(): UseMediaSessionResult {
     [adapter]
   );
 
+  const updateCameraStatus = useCallback(
+    (status: CameraStatus) => {
+      adapter.updateCameraStatus(status);
+    },
+    [adapter]
+  );
+
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       void refreshMetrics();
@@ -200,6 +208,7 @@ export function useMediaSession(): UseMediaSessionResult {
     switchAsset,
     toggleMode,
     recordFrame,
+    updateCameraStatus,
     refreshMetrics,
   };
 }

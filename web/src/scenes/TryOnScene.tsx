@@ -29,6 +29,7 @@ export function TryOnScene() {
     switchAsset,
     toggleMode,
     recordFrame,
+    updateCameraStatus,
     refreshMetrics,
   } = useMediaSession();
 
@@ -147,6 +148,7 @@ export function TryOnScene() {
           metrics={metrics}
           onFrame={recordFrame}
           onUploadPhoto={handleUploadPhoto}
+          onCameraStatusChange={updateCameraStatus}
         />
 
         <div className="flex flex-col gap-4">

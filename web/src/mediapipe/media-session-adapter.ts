@@ -41,6 +41,7 @@ export interface MediaSessionAdapter {
   toggleMode(input: ToggleModeInput): Promise<void>;
   getMetrics(): Promise<MetricsResponse>;
   recordFrame(timestamp?: number): void;
+  updateCameraStatus(status: CameraStatus): void;
   getState(): PreviewState;
   subscribe(listener: (state: PreviewState) => void): () => void;
 }
@@ -169,6 +170,18 @@ export function createMediaSessionAdapter(
         fpsHistory: metricsState.fpsHistory,
         lastFrameTimestamp: metricsState.lastFrameTimestamp,
       };
+      emit();
+    },
+    updateCameraStatus(status) {
+      if (state.cameraStatus === status) {
+        return;
+      }
+
+      state = {
+        ...state,
+        cameraStatus: status,
+      };
+
       emit();
     },
     getState() {
