@@ -1,7 +1,49 @@
-import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { MetricsResponse } from "@/mediapipe/media-session-adapter";
+import { DemoAsset, DemoAssetMediaType } from "@/models/demo-asset";
 import { CameraStatus, PreviewState } from "@/models/preview-state";
+
+function getOverlayPosition(mediaType?: DemoAssetMediaType): string {
+  switch (mediaType) {
+    case "overlay":
+      return "top-1/2 left-1/2 w-[60%] max-w-sm -translate-x-1/2 -translate-y-1/2";
+    case "shader":
+      return "inset-0 h-full w-full";
+    case "foot-overlay":
+      return "bottom-6 left-1/2 w-[75%] max-w-lg -translate-x-1/2";
+    default:
+      return "top-1/2 left-1/2 w-1/2 max-w-sm -translate-x-1/2 -translate-y-1/2";
+  }
+}
+
+function getOverlayEnhancements(mediaType?: DemoAssetMediaType): string {
+  switch (mediaType) {
+    case "overlay":
+      return "drop-shadow-xl";
+    case "shader":
+      return "mix-blend-screen saturate-150";
+    case "foot-overlay":
+      return "drop-shadow-lg";
+    default:
+      return "";
+  }
+}
+
+function getOverlayOpacity(mediaType: DemoAssetMediaType | undefined, visible: boolean): string {
+  if (!visible) {
+    return "opacity-0";
+  }
+
+  switch (mediaType) {
+    case "shader":
+      return "opacity-80";
+    case "foot-overlay":
+      return "opacity-85";
+    default:
+      return "opacity-90";
+  }
+}
 
 export interface PreviewStageProps {
   state: PreviewState;
@@ -9,6 +51,7 @@ export interface PreviewStageProps {
   onFrame: (timestamp?: number) => void;
   onUploadPhoto: (file: File) => void;
   onCameraStatusChange?: (status: CameraStatus) => void;
+  activeAsset?: DemoAsset | null;
 }
 
 export function PreviewStage({
@@ -17,6 +60,7 @@ export function PreviewStage({
   onFrame,
   onUploadPhoto,
   onCameraStatusChange,
+  activeAsset,
 }: PreviewStageProps) {
   const frameRequestRef = useRef<number>();
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null);
@@ -171,6 +215,41 @@ export function PreviewStage({
     reader.readAsDataURL(file);
   };
 
+  const shouldShowOverlay = useMemo(() => {
+    if (!activeAsset) {
+      return false;
+    }
+
+    if (state.mode === "live") {
+      return state.cameraStatus === "ready" && !livePreviewError && !isInitializingCamera;
+    }
+
+    return Boolean(uploadedPhotoUrl);
+  }, [activeAsset, state.cameraStatus, state.mode, livePreviewError, isInitializingCamera, uploadedPhotoUrl]);
+
+  const overlayClassName = useMemo(() => {
+    if (!activeAsset) {
+      return "";
+    }
+
+    const base = [
+      "pointer-events-none",
+      "absolute",
+      "z-10",
+      "select-none",
+      "object-contain",
+      "transition-all",
+      "duration-500",
+      "ease-out",
+    ];
+
+    base.push(getOverlayPosition(activeAsset.mediaType));
+    base.push(getOverlayEnhancements(activeAsset.mediaType));
+    base.push(getOverlayOpacity(activeAsset.mediaType, shouldShowOverlay));
+
+    return base.filter(Boolean).join(" ");
+  }, [activeAsset, shouldShowOverlay]);
+
   return (
     <section
       className="relative w-full overflow-hidden rounded-xl border border-surface-elevated bg-surface-base"
@@ -182,9 +261,9 @@ export function PreviewStage({
         <span data-testid="camera-status">{state.cameraStatus}</span>
       </div>
 
-      <div className="flex h-64 items-center justify-center bg-neutral-900 text-neutral-200">
+      <div className="relative flex h-64 w-full items-center justify-center bg-neutral-900 text-neutral-200">
         {state.mode === "live" ? (
-          <div className="relative h-full w-full">
+          <>
             <video
               ref={videoRef}
               className={`h-full w-full object-cover transition-opacity duration-300 ${livePreviewError ? "opacity-20" : "opacity-100"}`}
@@ -194,8 +273,20 @@ export function PreviewStage({
               data-testid="live-video"
             />
 
+            {activeAsset ? (
+              <img
+                src={activeAsset.sourceUri}
+                alt=""
+                aria-hidden="true"
+                role="presentation"
+                className={overlayClassName}
+                data-testid="asset-overlay"
+                draggable={false}
+              />
+            ) : null}
+
             {(isInitializingCamera || livePreviewError) ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-neutral-900/80 px-6 text-center">
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-neutral-900/80 px-6 text-center">
                 {isInitializingCamera && !livePreviewError ? (
                   <>
                     <span className="text-lg font-semibold">啟動鏡頭中…</span>
@@ -211,22 +302,36 @@ export function PreviewStage({
                 ) : null}
               </div>
             ) : null}
-          </div>
+          </>
         ) : (
-          <div className="flex flex-col items-center gap-2">
-            {uploadedPhotoUrl ? (
+          <>
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+              {uploadedPhotoUrl ? (
+                <img
+                  src={uploadedPhotoUrl}
+                  alt="上傳的照片"
+                  className="max-h-56 rounded-lg object-contain"
+                  data-testid="uploaded-photo"
+                />
+              ) : (
+                <span className="text-sm text-neutral-400" data-testid="uploaded-photo-empty">
+                  尚未上傳照片
+                </span>
+              )}
+            </div>
+
+            {activeAsset ? (
               <img
-                src={uploadedPhotoUrl}
-                alt="上傳的照片"
-                className="max-h-56 rounded-lg object-contain"
-                data-testid="uploaded-photo"
+                src={activeAsset.sourceUri}
+                alt=""
+                aria-hidden="true"
+                role="presentation"
+                className={overlayClassName}
+                data-testid="asset-overlay"
+                draggable={false}
               />
-            ) : (
-              <span className="text-sm text-neutral-400" data-testid="uploaded-photo-empty">
-                尚未上傳照片
-              </span>
-            )}
-          </div>
+            ) : null}
+          </>
         )}
       </div>
 

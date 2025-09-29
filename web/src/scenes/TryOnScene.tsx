@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 import { AssetSelector } from "@/components/AssetSelector";
 import { DeviceSwitchBanner } from "@/components/DeviceSwitchBanner";
@@ -112,9 +112,12 @@ export function TryOnScene() {
     [toggleMode]
   );
 
-  const accessibilityHint = getAccessibilityHint(
-    assets.find((asset) => asset.id === state.activeAssetId)?.accessibilityHintId ?? "hint-glasses"
+  const activeAsset = useMemo(
+    () => assets.find((asset) => asset.id === state.activeAssetId) ?? null,
+    [assets, state.activeAssetId]
   );
+
+  const accessibilityHint = getAccessibilityHint(activeAsset?.accessibilityHintId ?? "hint-glasses");
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6">
@@ -149,6 +152,7 @@ export function TryOnScene() {
           onFrame={recordFrame}
           onUploadPhoto={handleUploadPhoto}
           onCameraStatusChange={updateCameraStatus}
+          activeAsset={activeAsset}
         />
 
         <div className="flex flex-col gap-4">
