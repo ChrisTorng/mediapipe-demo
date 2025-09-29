@@ -1,21 +1,9 @@
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { MetricsResponse } from "@/mediapipe/media-session-adapter";
+import { useTryOnProcessor } from "@/mediapipe/try-on-processor";
 import { DemoAsset, DemoAssetMediaType } from "@/models/demo-asset";
 import { CameraStatus, PreviewState } from "@/models/preview-state";
-
-function getOverlayPosition(mediaType?: DemoAssetMediaType): string {
-  switch (mediaType) {
-    case "overlay":
-      return "top-1/2 left-1/2 w-[60%] max-w-sm -translate-x-1/2 -translate-y-1/2";
-    case "shader":
-      return "inset-0 h-full w-full";
-    case "foot-overlay":
-      return "bottom-6 left-1/2 w-[75%] max-w-lg -translate-x-1/2";
-    default:
-      return "top-1/2 left-1/2 w-1/2 max-w-sm -translate-x-1/2 -translate-y-1/2";
-  }
-}
 
 function getOverlayEnhancements(mediaType?: DemoAssetMediaType): string {
   switch (mediaType) {
@@ -65,13 +53,20 @@ export function PreviewStage({
   const frameRequestRef = useRef<number>();
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const overlayRef = useRef<HTMLImageElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [isInitializingCamera, setIsInitializingCamera] = useState<boolean>(false);
   const [livePreviewError, setLivePreviewError] = useState<string | null>(null);
+  const tryOnProcessor = useTryOnProcessor();
 
   useEffect(() => {
     function renderFrame(timestamp: number) {
       onFrame(timestamp);
+
+      if (state.mode === "live") {
+        tryOnProcessor.processVideoFrame(timestamp);
+      }
+
       frameRequestRef.current = window.requestAnimationFrame(renderFrame);
     }
 
@@ -82,7 +77,7 @@ export function PreviewStage({
         window.cancelAnimationFrame(frameRequestRef.current);
       }
     };
-  }, [onFrame]);
+  }, [onFrame, state.mode, tryOnProcessor]);
 
   useEffect(() => {
     if (state.mode === "live") {
@@ -198,6 +193,62 @@ export function PreviewStage({
 
   useEffect(() => () => stopLiveStream(), [stopLiveStream]);
 
+  useEffect(() => {
+    const overlay = overlayRef.current;
+    tryOnProcessor.setOverlayElement(overlay ?? null);
+    tryOnProcessor.setMode(state.mode);
+
+    if (!activeAsset) {
+      return;
+    }
+
+    void tryOnProcessor.setAsset(activeAsset);
+
+    if (state.mode !== "live") {
+      return;
+    }
+
+    const video = videoRef.current;
+
+    if (!video || !overlay) {
+      return;
+    }
+
+    tryOnProcessor.attach(video, overlay);
+
+    return () => {
+      tryOnProcessor.detach();
+    };
+  }, [activeAsset, state.mode, tryOnProcessor]);
+
+  useEffect(() => {
+    if (state.mode !== "photo-fallback" || !uploadedPhotoUrl || !activeAsset) {
+      return;
+    }
+
+    const overlay = overlayRef.current;
+
+    if (!overlay) {
+      return;
+    }
+
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.src = uploadedPhotoUrl;
+
+    image.onload = async () => {
+      tryOnProcessor.setMode("photo-fallback");
+      tryOnProcessor.setOverlayElement(overlay);
+      await tryOnProcessor.setAsset(activeAsset);
+      tryOnProcessor.setOverlayEnabled(true);
+      tryOnProcessor.processImageFrame(image);
+    };
+
+    return () => {
+      image.onload = null;
+    };
+  }, [state.mode, uploadedPhotoUrl, activeAsset, tryOnProcessor]);
+
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
@@ -227,6 +278,10 @@ export function PreviewStage({
     return Boolean(uploadedPhotoUrl);
   }, [activeAsset, state.cameraStatus, state.mode, livePreviewError, isInitializingCamera, uploadedPhotoUrl]);
 
+  useEffect(() => {
+    tryOnProcessor.setOverlayEnabled(shouldShowOverlay);
+  }, [shouldShowOverlay, tryOnProcessor]);
+
   const overlayClassName = useMemo(() => {
     if (!activeAsset) {
       return "";
@@ -238,12 +293,16 @@ export function PreviewStage({
       "z-10",
       "select-none",
       "object-contain",
-      "transition-all",
-      "duration-500",
+      "transition-transform",
+      "transition-opacity",
+      "duration-300",
       "ease-out",
+      "left-1/2",
+      "top-1/2",
+      "-translate-x-1/2",
+      "-translate-y-1/2",
     ];
 
-    base.push(getOverlayPosition(activeAsset.mediaType));
     base.push(getOverlayEnhancements(activeAsset.mediaType));
     base.push(getOverlayOpacity(activeAsset.mediaType, shouldShowOverlay));
 
@@ -275,6 +334,7 @@ export function PreviewStage({
 
             {activeAsset ? (
               <img
+                ref={overlayRef}
                 src={activeAsset.sourceUri}
                 alt=""
                 aria-hidden="true"
@@ -322,6 +382,7 @@ export function PreviewStage({
 
             {activeAsset ? (
               <img
+                ref={overlayRef}
                 src={activeAsset.sourceUri}
                 alt=""
                 aria-hidden="true"
