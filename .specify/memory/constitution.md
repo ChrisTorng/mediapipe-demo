@@ -1,50 +1,62 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+- Version change: N/A → 1.0.0
+- Modified principles:
+	- Placeholder → I. Uncompromising Code Quality
+	- Placeholder → II. Seamless User Experience Consistency
+	- Placeholder → III. Performance Accountability
+- Added sections:
+	- Execution Standards
+	- Delivery Workflow
+- Removed sections: None
+- Templates requiring updates:
+	- ✅ .specify/templates/plan-template.md
+	- ✅ .specify/templates/spec-template.md
+	- ✅ .specify/templates/tasks-template.md
+- Follow-up TODOs: None
+-->
+
+# MediaPipe Demo Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Uncompromising Code Quality
+- Every merge request MUST include automated tests that cover 90% or more of the touched lines and assert the intended behavior, with failures blocking merge.
+- Linting, formatting, and static analysis MUST pass in continuous integration before human review begins; fixes belong in the same change set.
+- At least one maintainer other than the author MUST review each change, verifying readability, test adequacy, and regression risk before approval.
+- Production code MUST remain free of `TODO` or commented-out logic unless paired with a scheduled follow-up task in `/specs/.../tasks.md`.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+**Rationale**: Consistent application of automated and human quality gates keeps the codebase reliable, maintainable, and ready for iterative improvement.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Seamless User Experience Consistency
+- Feature specs MUST define UX acceptance criteria that align with the latest approved interaction patterns and visual tokens captured in project documentation.
+- Implementations MUST retain behavior parity across supported platforms, including keyboard, mouse, and touch inputs, with accessibility conformance at WCAG 2.1 AA or higher.
+- UI changes MUST include visual or interaction regression tests (e.g., snapshot, golden image, or scripted demo capture) before merge, and discrepancies MUST be triaged before release.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**Rationale**: Enforcing shared patterns and accessibility standards preserves a cohesive experience that users can trust regardless of feature growth.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Performance Accountability
+- Each feature spec MUST declare performance budgets covering latency, frame rate, and resource ceilings; implementation MUST demonstrate compliance before release.
+- Interactive paths MUST sustain ≥60 fps on reference hardware, with p95 action-to-render latency ≤150 ms and cold-start initialization ≤1.5 s.
+- Performance telemetry MUST be instrumented and exported to the observability pipeline so regressions trigger automated alerts within one deploy cycle.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**Rationale**: Explicit, measured performance goals keep the product responsive, protect user trust, and prevent regressions from shipping unnoticed.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+## Execution Standards
+- Feature artifacts (spec, plan, tasks) MUST map each requirement to the principle it satisfies; gaps block advancement to subsequent phases.
+- Continuous integration MUST run the full automated test and performance smoke suite on every default-branch merge candidate; failures block deployment.
+- Release notes MUST call out UX-affecting changes with links to validation evidence (tests or demo captures) prior to tagging a release.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+## Delivery Workflow
+1. Draft feature spec referencing relevant principles and enumerating performance budgets.
+2. Produce implementation plan including an initial and post-design Constitution Check with explicit mitigation for any risk.
+3. Generate tasks in principle-aligned order: tests → instrumentation → implementation → validation.
+4. Before release, confirm telemetry dashboards and UX regression assets reflect the latest changes and archive evidence alongside the feature documentation.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+- This constitution supersedes other process documents when conflicts arise. Amendments require consensus from at least two maintainers and a published rationale in the governance log.
+- Versioning follows semantic rules: MAJOR for principle changes, MINOR for new scope or enforcement steps, PATCH for clarifications. Every amendment MUST update the version header and Sync Impact Report.
+- Compliance reviews occur at the end of Phase 1 (design) and prior to releases. Any violation MUST be resolved or paired with an approved remediation plan before merging.
+- Historical versions MUST remain accessible in repository history; deviations in active work MUST be documented in the relevant plan under Complexity Tracking.
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
-
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2025-09-26 | **Last Amended**: 2025-09-26

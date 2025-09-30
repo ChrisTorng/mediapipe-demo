@@ -1,0 +1,33 @@
+@import "./tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+	color: rgb(var(--color-text-primary));
+	background-color: rgb(var(--color-surface-base));
+}
+
+body {
+	font-family: theme("fontFamily.sans");
+	min-height: 100vh;
+	background-color: rgb(var(--color-surface-base));
+	color: rgb(var(--color-text-primary));
+	line-height: 1.6;
+}
+
+a {
+	color: rgb(var(--color-brand-primary));
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+	outline: none;
+	box-shadow: var(--shadow-focus, theme("boxShadow.focus"));
+}

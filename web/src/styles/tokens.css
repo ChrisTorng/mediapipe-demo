@@ -1,0 +1,26 @@
+:root {
+  --color-brand-primary: 29 78 216;
+  --color-brand-secondary: 109 40 217;
+  --color-surface-base: 255 255 255;
+  --color-surface-elevated: 243 244 246;
+  --color-text-primary: 17 24 39;
+  --color-text-secondary: 75 85 99;
+  --color-text-inverted: 249 250 251;
+  --color-focus-ring: 59 130 246;
+
+  --motion-duration-fast: 120ms;
+  --motion-duration-medium: 200ms;
+  --motion-duration-slow: 320ms;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-fast: 0ms;
+    --motion-duration-medium: 0ms;
+    --motion-duration-slow: 0ms;
+  }
+}

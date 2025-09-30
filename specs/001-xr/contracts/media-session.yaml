@@ -1,0 +1,104 @@
+openapi: 3.1.0
+info:
+  title: Media Session Adapter (Front-end Local API)
+  version: 0.1.0
+  description: |
+    虛擬試戴示範網站的前端模組介面，模擬無後端情境下的交互契約。
+    若日後引入 FastAPI 代理，將於本檔補充 REST 端點。
+servers:
+  - url: local://mediapipe
+    description: 前端函式模組（以 TypeScript export 提供）
+paths:
+  /session/initialize:
+    post:
+      summary: 啟動 MediaPipe session 並載入預設資產
+      operationId: initializeSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [assetId, deviceProfile]
+              properties:
+                assetId:
+                  type: string
+                  enum: [glasses, makeup, shoes]
+                deviceProfile:
+                  type: string
+                  enum: [desktop, mobile, tablet]
+      responses:
+        '200':
+          description: 初始化成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    enum: [ready]
+                  fpsTarget:
+                    type: number
+                  notes:
+                    type: string
+        '409':
+          description: session 已存在
+  /session/switch-asset:
+    post:
+      summary: 切換展示資產
+      operationId: switchAsset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [assetId]
+              properties:
+                assetId:
+                  type: string
+      responses:
+        '200':
+          description: 已更新 activeAssetId
+        '422':
+          description: 資產不存在
+  /session/toggle-mode:
+    post:
+      summary: 在 live / photo fallback 之間切換
+      operationId: toggleMode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode]
+              properties:
+                mode:
+                  type: string
+                  enum: [live, photo-fallback]
+      responses:
+        '200':
+          description: 模式已更新
+  /session/metrics:
+    get:
+      summary: 取得最新性能指標
+      operationId: getMetrics
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [rollingFps, latencyMs]
+                properties:
+                  rollingFps:
+                    type: number
+                  latencyMs:
+                    type: number
+                  updatedAt:
+                    type: string
+                    format: date-time
